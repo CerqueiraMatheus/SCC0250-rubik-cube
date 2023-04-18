@@ -20,6 +20,22 @@ fragment_code = """
     }
     """
 
+def keyHandler(window, key, scancode, action, mods):
+    global cube
+
+    # Cam rotation
+    if key == glfw.KEY_UP:
+        cube.rotateCamX(0.1)
+
+    if key == glfw.KEY_DOWN:
+        cube.rotateCamX(-0.1)
+
+    if key == glfw.KEY_LEFT:
+        cube.rotateCamY(0.1)
+
+    if key == glfw.KEY_RIGHT:
+        cube.rotateCamY(-0.1)
+
 def applyShaders(vert_code, frag_code):
     vertex   = glCreateShader(GL_VERTEX_SHADER)
     fragment = glCreateShader(GL_FRAGMENT_SHADER)
@@ -346,6 +362,7 @@ class Cube:
                 for idx in cubies_idx_on_face:
                     self.cubies[idx].rotateZ(ang_dt)
             
+            glfw.poll_events()
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
             self.draw(program)
             glfw.swap_buffers(window)
@@ -365,16 +382,18 @@ class Cube:
 
         return self
 
-
     def draw(self, program):
         
         for index, cubie in enumerate(self.cubies):
             cubie.draw(program, index * 24)
 
+cube = Cube()
+
 def main():
     window, program = createWindow(vertex_code, fragment_code)
 
-    cube = Cube()
+    glfw.set_key_callback(window, keyHandler)
+
     vertices = cube.getVertices()
     sendVertices(program, vertices)
 
@@ -390,6 +409,10 @@ def main():
 
         cube.drawSlowRotateFace(window, program, (1, 0, 0), np.pi / 2)
         cube.drawSlowRotateFace(window, program, (0, 1, 0), np.pi / 2)
+        
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        cube.draw(program)
+        glfw.swap_buffers(window)
 
     glfw.terminate()
     
