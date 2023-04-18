@@ -23,7 +23,7 @@ fragment_code = """
 def keyHandler(window, key, scancode, action, mods):
     global cube, program, lock_rotation
 
-    # Cam Rotations
+    # Cam Rotation
     if key == glfw.KEY_UP:
         cube.rotateCamX(0.1)
 
@@ -36,6 +36,24 @@ def keyHandler(window, key, scancode, action, mods):
     if key == glfw.KEY_RIGHT:
         cube.rotateCamY(-0.1)
 
+    # Cam Translation
+    if key == glfw.KEY_Z:
+        cube.translateCamZ(0.1)
+
+    if key == glfw.KEY_X:
+        cube.translateCamZ(-0.1)
+
+    if key == glfw.KEY_C:
+        cube.translateCamY(0.1)
+
+    if key == glfw.KEY_V:
+        cube.translateCamY(-0.1)
+
+    if key == glfw.KEY_B:
+        cube.translateCamX(0.1)
+
+    if key == glfw.KEY_N:
+        cube.translateCamX(-0.1)
 
     # Face Rotations
     if lock_rotation == True:
@@ -296,6 +314,42 @@ class Cubie:
         self.cam = mat_rot_z @ self.cam
         
         return self
+    
+    def translateCamX(self, dist):
+        mat_transl_x = np.array([
+            [1, 0, 0, dist],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1]
+        ])
+
+        self.cam = mat_transl_x @ self.cam
+
+        return self
+    
+    def translateCamY(self, dist):
+        mat_transl_y = np.array([
+            [1, 0, 0, 0],
+            [0, 1, 0, dist],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1]
+        ])
+
+        self.cam = mat_transl_y @ self.cam
+
+        return self
+    
+    def translateCamZ(self, dist):
+        mat_transl_z = np.array([
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 1, dist],
+            [0, 0, 0, 1]
+        ])
+
+        self.cam = mat_transl_z @ self.cam
+
+        return self
 
     def drawFace(self, program, vert_start_idx, face):
         loc_color = glGetUniformLocation(program, "color")
@@ -373,6 +427,21 @@ class Cube:
     def rotateCamZ(self, ang):
         for cubie in self.cubies:
             cubie.rotateCamZ(ang)
+        return self
+    
+    def translateCamX(self, dist):
+        for cubie in self.cubies:
+            cubie.translateCamX(dist)
+        return self
+    
+    def translateCamY(self, dist):
+        for cubie in self.cubies:
+            cubie.translateCamY(dist)
+        return self
+    
+    def translateCamZ(self, dist):
+        for cubie in self.cubies:
+            cubie.translateCamZ(dist)
         return self
     
     
