@@ -22,38 +22,47 @@ fragment_code = """
 
 def keyHandler(window, key, scancode, action, mods):
     global cube, program, lock_rotation
-
-    # Cam Rotation
+    
+    # Camera Scale
+    if key == glfw.KEY_I:
+        cube.scale(1.1)
+    if key == glfw.KEY_O:
+        cube.scale(1.0/1.1)
+    # Camera Rotation
     if key == glfw.KEY_UP:
-        cube.rotateCamX(0.1)
+        cube.rotateCameraX(0.1)
 
     if key == glfw.KEY_DOWN:
-        cube.rotateCamX(-0.1)
+        cube.rotateCameraX(-0.1)
 
     if key == glfw.KEY_LEFT:
-        cube.rotateCamY(0.1)
+        cube.rotateCameraY(0.1)
 
     if key == glfw.KEY_RIGHT:
-        cube.rotateCamY(-0.1)
+        cube.rotateCameraY(-0.1)
 
-    # Cam Translation
+    # Camera Translation
     if key == glfw.KEY_Z:
-        cube.translateCamZ(0.1)
+        cube.translateCameraZ(0.1)
 
     if key == glfw.KEY_X:
-        cube.translateCamZ(-0.1)
+        cube.translateCameraZ(-0.1)
 
     if key == glfw.KEY_C:
-        cube.translateCamY(0.1)
+        cube.translateCameraY(0.1)
 
     if key == glfw.KEY_V:
-        cube.translateCamY(-0.1)
+        cube.translateCameraY(-0.1)
 
     if key == glfw.KEY_B:
-        cube.translateCamX(0.1)
+        cube.translateCameraX(0.1)
 
     if key == glfw.KEY_N:
-        cube.translateCamX(-0.1)
+        cube.translateCameraX(-0.1)
+
+    # Debug:
+    if key == glfw.KEY_P:
+        print(cube.is_solved())
 
     # Face Rotations
     if lock_rotation == True:
@@ -145,6 +154,7 @@ class Cubie:
         
         # Seen coordinate from the cubie
         self.pos = (float(x), float(y), float(z), 1.0)
+        self.original_pos = (float(x), float(y), float(z), 1.0)
         self.len = len
         
         # Actual coordinate in the cube (opengl coordinate)
@@ -152,15 +162,20 @@ class Cubie:
         self.verts = self.defineVertices(self.central_verts, self.len)
         
         self.mat = np.identity(4, dtype=np.float32)
-        self.cam = np.identity(4, dtype=np.float32)
+        self.camera = np.identity(4, dtype=np.float32)
+        self.camera_rotation = np.identity(4, dtype=np.float32)
         
         self.colors = np.array([(1.0, 0.0, 0.0, 1.0),
-                                (0.0, 1.0, 0.0, 1.0),
                                 (0.0, 0.0, 1.0, 1.0),
-                                (1.0, 1.0, 0.0, 1.0),
-                                (1.0, 0.0, 1.0, 1.0),
-                                (0.0, 1.0, 1.0, 1.0)])
+                                (1.0, 0.6, 0.0, 1.0),
+                                (0.0, 1.0, 0.0, 1.0),
+                                (1.0, 1.0, 1.0, 1.0),
+                                (1.0, 1.0, 0.0, 1.0)])
 
+    def is_solved(self):
+        test_vertices = self.defineVertices((2*self.pos[0]*self.len, 2*self.pos[1]*self.len, 2*self.pos[2]*self.len), self.len) - self.verts
+        return np.all(abs(test_vertices) < 1e-4)
+        
     def defineVertices(self, pos, len):
         return np.array([
 
@@ -198,6 +213,14 @@ class Cubie:
     def getVertices(self):
         return self.verts
         
+    def scale(self, s):
+        mat_scale = np.array([
+            [s, 0, 0, 0],
+            [0, s, 0, 0],
+            [0, 0, s, 0],
+            [0, 0, 0, 1]], dtype=np.float32)
+        self.camera = mat_scale @ self.camera
+
     # Use for visual rotation
     def rotateX(self, ang):
         mat_rot_x = np.array([
@@ -225,7 +248,7 @@ class Cubie:
 
         return self
 
-    def rotateCamX(self, ang):
+    def rotateCameraX(self, ang):
         mat_rot_x = np.array([
             [1, 0, 0, 0],
             [0, np.cos(ang), -np.sin(ang), 0],
@@ -233,7 +256,7 @@ class Cubie:
             [0, 0, 0, 1]
         ])
         
-        self.cam = mat_rot_x @ self.cam
+        self.camera_rotation = mat_rot_x @ self.camera_rotation
         
         return self
 
@@ -264,7 +287,7 @@ class Cubie:
         
         return self
     
-    def rotateCamY(self, ang):
+    def rotateCameraY(self, ang):
         mat_rot_y = np.array([
             [np.cos(ang), 0, np.sin(ang), 0],
             [0, 1, 0, 0],
@@ -272,7 +295,7 @@ class Cubie:
             [0, 0, 0, 1]
         ])
         
-        self.cam = mat_rot_y @ self.cam
+        self.camera_rotation = mat_rot_y @ self.camera_rotation
         
         return self
 
@@ -303,7 +326,7 @@ class Cubie:
         
         return self
     
-    def rotateCamZ(self, ang):
+    def rotateCameraZ(self, ang):
         mat_rot_z = np.array([
             [np.cos(ang), -np.sin(ang), 0, 0],
             [np.sin(ang), np.cos(ang), 0, 0],
@@ -311,11 +334,11 @@ class Cubie:
             [0, 0, 0, 1]
         ])
         
-        self.cam = mat_rot_z @ self.cam
+        self.camera_rotation = mat_rot_z @ self.camera_rotation
         
         return self
     
-    def translateCamX(self, dist):
+    def translateCameraX(self, dist):
         mat_transl_x = np.array([
             [1, 0, 0, dist],
             [0, 1, 0, 0],
@@ -323,11 +346,11 @@ class Cubie:
             [0, 0, 0, 1]
         ])
 
-        self.cam = mat_transl_x @ self.cam
+        self.camera = mat_transl_x @ self.camera
 
         return self
     
-    def translateCamY(self, dist):
+    def translateCameraY(self, dist):
         mat_transl_y = np.array([
             [1, 0, 0, 0],
             [0, 1, 0, dist],
@@ -335,11 +358,11 @@ class Cubie:
             [0, 0, 0, 1]
         ])
 
-        self.cam = mat_transl_y @ self.cam
+        self.camera = mat_transl_y @ self.camera
 
         return self
     
-    def translateCamZ(self, dist):
+    def translateCameraZ(self, dist):
         mat_transl_z = np.array([
             [1, 0, 0, 0],
             [0, 1, 0, 0],
@@ -347,7 +370,7 @@ class Cubie:
             [0, 0, 0, 1]
         ])
 
-        self.cam = mat_transl_z @ self.cam
+        self.camera = mat_transl_z @ self.camera
 
         return self
 
@@ -371,7 +394,7 @@ class Cubie:
     def draw(self, program, vert_start_idx):
         loc_matrix = glGetUniformLocation(program, "mat_transformation")
 
-        result_mat = self.cam @ self.mat
+        result_mat = self.camera @ self.camera_rotation @ self.mat
         glUniformMatrix4fv(loc_matrix, 1, GL_TRUE, result_mat.reshape(16))
 
         for i in range(6):
@@ -381,6 +404,9 @@ class Cubie:
 class Cube:
     def __init__(self):
         self.cubies = self.generateCubies()
+    
+    def is_solved(self):
+        return all([cubie.is_solved() for cubie in self.cubies])
 
     def generateCubies(self):
         cubies = []
@@ -399,14 +425,18 @@ class Cube:
             vertices = np.vstack((vertices, cubie.getVertices()))
         return vertices
     
+    def scale(self, s):
+        for cubie in self.cubies:
+            cubie.scale(s)
+
     def rotateX(self, ang):
         for cubie in self.cubies:
             cubie.rotateX(ang)
         return self
     
-    def rotateCamX(self, ang):
+    def rotateCameraX(self, ang):
         for cubie in self.cubies:
-            cubie.rotateCamX(ang)
+            cubie.rotateCameraX(ang)
         return self
 
     def rotateY(self, ang):
@@ -414,9 +444,9 @@ class Cube:
             cubie.rotateY(ang)
         return self
     
-    def rotateCamY(self, ang):
+    def rotateCameraY(self, ang):
         for cubie in self.cubies:
-            cubie.rotateCamY(ang)
+            cubie.rotateCameraY(ang)
         return self
     
     def rotateZ(self, ang):
@@ -424,24 +454,24 @@ class Cube:
             cubie.rotateZ(ang)
         return self
     
-    def rotateCamZ(self, ang):
+    def rotateCameraZ(self, ang):
         for cubie in self.cubies:
-            cubie.rotateCamZ(ang)
+            cubie.rotateCameraZ(ang)
         return self
     
-    def translateCamX(self, dist):
+    def translateCameraX(self, dist):
         for cubie in self.cubies:
-            cubie.translateCamX(dist)
+            cubie.translateCameraX(dist)
         return self
     
-    def translateCamY(self, dist):
+    def translateCameraY(self, dist):
         for cubie in self.cubies:
-            cubie.translateCamY(dist)
+            cubie.translateCameraY(dist)
         return self
     
-    def translateCamZ(self, dist):
+    def translateCameraZ(self, dist):
         for cubie in self.cubies:
-            cubie.translateCamZ(dist)
+            cubie.translateCameraZ(dist)
         return self
     
     
@@ -458,7 +488,7 @@ class Cube:
         # Index of face that is equal to 1 or -1
         face_idx, face_value = [(i, x) for i, x in enumerate(face) if x == 1 or x == -1][0]
 
-        ang_steps = 100
+        ang_steps = 20
         ang_dt = ang / ang_steps
 
         cubies_idx_on_face = [i for i, cubie in enumerate(self.cubies) if cubie.pos[face_idx] == face_value]
@@ -520,9 +550,9 @@ def main():
     glfw.show_window(window)
     glEnable(GL_DEPTH_TEST)
 
-    glClearColor(1.0, 1.0, 1.0, 1.0)
+    glClearColor(0.0, 0.0, 0.0, 1.0)
 
-    cube.rotateCamX(0.4).rotateCamY(0.4).rotateCamZ(0.4)
+    cube.rotateCameraX(0.4).rotateCameraY(0.4).rotateCameraZ(0.4)
 
     while not glfw.window_should_close(window):
         glfw.poll_events()
