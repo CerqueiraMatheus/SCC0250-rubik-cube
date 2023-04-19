@@ -154,7 +154,6 @@ class Cubie:
         
         # Seen coordinate from the cubie
         self.pos = (float(x), float(y), float(z), 1.0)
-        self.original_pos = (float(x), float(y), float(z), 1.0)
         self.len = len
         
         # Actual coordinate in the cube (opengl coordinate)
@@ -173,7 +172,8 @@ class Cubie:
                                 (1.0, 1.0, 0.0, 1.0)])
 
     def is_solved(self):
-        test_vertices = self.defineVertices((2*self.pos[0]*self.len, 2*self.pos[1]*self.len, 2*self.pos[2]*self.len), self.len) - self.verts
+        test_vertices = np.array([(self.mat @ np.array([vert[0], vert[1], vert[2], 1.0]).T) - np.array([vert[0], vert[1], vert[2], 1.0]).T for vert in self.verts])
+        print(abs(test_vertices))
         return np.all(abs(test_vertices) < 1e-4)
         
     def defineVertices(self, pos, len):
