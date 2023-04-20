@@ -2,8 +2,12 @@
 
 ## Preview
 
-![](./files/preview.gif)
+<p align="center">
+  <img src="./files/preview.gif"/>
+</p>
 
 ## User input
 
-![](./files/controls.png)
+<p align="center">
+  <img src="./files/controls.png"/>
+</p>
