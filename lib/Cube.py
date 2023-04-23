@@ -14,6 +14,7 @@ import numpy as np
 from lib import globals
 from OpenGL.GL import *
 from lib.Cubie import Cubie
+from random import randrange
 
 X_FACE_IDX = 0
 Y_FACE_IDX = 1
@@ -143,8 +144,24 @@ class Cube:
             cubie.translateCameraZ(dist)
         return self
     
+    def scramble(self, num_moves, window):
+        for i in range(num_moves):
+            movimento = randrange(6)
+            if movimento == 0:
+                face = (1,0,0)
+            elif movimento == 1:
+                face = (-1,0,0)
+            elif movimento == 2:
+                face = (0,1,0)
+            elif movimento == 3:
+                face = (0,-1,0)
+            elif movimento == 4:
+                face = (0,0,1)
+            else:
+                face = (0,0,-1)
+            self.drawSlowRotateFace(window, globals.program, face, np.pi/2, 5)
     
-    def drawSlowRotateFace(self, window, program, face, ang):
+    def drawSlowRotateFace(self, window, program, face, ang, ang_steps = 20):
         """
             Function to animate the rotation of a face of the cube
             The logic may be a little bit tricky
@@ -161,8 +178,7 @@ class Cube:
         # Index of face that is equal to 1 or -1
         face_idx, face_value = [(i, x) for i, x in enumerate(face) if x == 1 or x == -1][0]
 
-        # Define the number of steps used and the angle delta for each step 
-        ang_steps = 20
+        # Define the angle delta for each step 
         ang_dt = ang / ang_steps
 
         # Get the indexes of the cubies that are on the face to be rotated

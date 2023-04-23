@@ -11,6 +11,15 @@
 
 import numpy as np
 from OpenGL.GL import *
+from enum import Enum
+
+class CubieOrientation(Enum):
+    ORIGINAL = 0
+    LEFT = 1
+    FRONT = 2
+    RIGHT = 3
+    BACK = 4
+    DOWN = 5
 
 class Cubie:
     """
@@ -26,6 +35,8 @@ class Cubie:
         
         # Seen coordinate from the cubie
         self.pos = (float(x), float(y), float(z), 1.0)
+        self.original_pos = (float(x), float(y), float(z), 1.0)
+        self.orientation = CubieOrientation.ORIGINAL;
         self.len = len
         
         # Actual coordinate in the cube (opengl coordinate)
@@ -46,10 +57,11 @@ class Cubie:
                                 (1.0, 1.0, 0.0, 1.0)])
 
     def is_solved(self):
-        test_vertices = np.array([(self.mat @ np.array([vert[0], vert[1], vert[2], 1.0]).T) - np.array([vert[0], vert[1], vert[2], 1.0]).T for vert in self.verts])
-        print(abs(test_vertices))
-        return np.all(abs(test_vertices) < 1e-4)
-        
+        if abs(self.pos[0]) + abs(self.pos[1]) + abs(self.pos[2]) < 2:
+           return True
+
+        return self.pos[0] == self.original_pos[0] and self.pos[1] == self.original_pos[1] and self.pos[2] == self.original_pos[2] and self.orientation == CubieOrientation.ORIGINAL
+
     def defineVertices(self, pos, len):
         """
             Define the vertices of the cubie
@@ -106,8 +118,8 @@ class Cubie:
             [0, 0, s, 0],
             [0, 0, 0, 1]], dtype=np.float32)
 
-        # Apply the scale to the camera
-        self.camera = mat_scale @ self.camera
+        # Apply the scale to the cube
+        self.camera_rotation = mat_scale @ self.camera_rotation
 
     # Use for visual rotation
     def rotateX(self, ang):
@@ -145,6 +157,15 @@ class Cubie:
         # Apply the rotation to the position of the cubie in the cube
         self.pos = mat_rot_x @ self.pos
         self.pos = np.round(self.pos)
+
+        if self.orientation == CubieOrientation.ORIGINAL:
+            self.orientation = CubieOrientation.FRONT if ang < 0 else CubieOrientation.BACK
+        elif self.orientation == CubieOrientation.FRONT:
+            self.orientation = CubieOrientation.DOWN if ang < 0 else CubieOrientation.ORIGINAL
+        elif self.orientation == CubieOrientation.DOWN:
+            self.orientation = CubieOrientation.BACK if ang < 0 else CubieOrientation.FRONT
+        elif self.orientation == CubieOrientation.BACK:
+            self.orientation = CubieOrientation.ORIGINAL if ang < 0 else CubieOrientation.DOWN
 
         return self
 
@@ -202,7 +223,16 @@ class Cubie:
         # Apply the rotation to the position of the cubie in the cube
         self.pos = mat_rot_y @ self.pos
         self.pos = np.round(self.pos)
-        
+
+        if self.orientation == CubieOrientation.FRONT:
+            self.orientation = CubieOrientation.RIGHT if ang < 0 else CubieOrientation.LEFT
+        elif self.orientation == CubieOrientation.RIGHT:
+            self.orientation = CubieOrientation.BACK if ang < 0 else CubieOrientation.FRONT
+        elif self.orientation == CubieOrientation.BACK:
+            self.orientation = CubieOrientation.LEFT if ang < 0 else CubieOrientation.RIGHT
+        elif self.orientation == CubieOrientation.LEFT:
+            self.orientation = CubieOrientation.FRONT if ang < 0 else CubieOrientation.BACK
+
         return self
     
     def rotateCameraY(self, ang):
@@ -259,7 +289,16 @@ class Cubie:
         # Apply the rotation to the position of the cubie in the cube
         self.pos = mat_rot_z @ self.pos
         self.pos = np.round(self.pos)
-        
+
+        if self.orientation == CubieOrientation.ORIGINAL:
+            self.orientation = CubieOrientation.LEFT if ang > 0 else CubieOrientation.RIGHT
+        elif self.orientation == CubieOrientation.LEFT:
+            self.orientation = CubieOrientation.DOWN if ang > 0 else CubieOrientation.ORIGINAL
+        elif self.orientation == CubieOrientation.DOWN:
+            self.orientation = CubieOrientation.RIGHT if ang > 0 else CubieOrientation.LEFT
+        elif self.orientation == CubieOrientation.RIGHT:
+            self.orientation = CubieOrientation.ORIGINAL if ang > 0 else CubieOrientation.DOWN
+
         return self
     
     def rotateCameraZ(self, ang):

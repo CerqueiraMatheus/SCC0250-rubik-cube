@@ -125,14 +125,17 @@ def keyHandler(window, key, scancode, action, mods):
     if key == glfw.KEY_N:
         globals.cube.translateCameraX(-0.1)
 
-    # Debug:
+    # Says if cube is solved:
     if key == glfw.KEY_P:
-        print(globals.cube.is_solved())
-
+        print("Parabéns! Você resolveu o cubo!" if globals.cube.is_solved() else "Infelizmente o cubo ainda não está montado!")
+    
     # Face Rotations
     if globals.lock_rotation == True:
         return
     
+    if key == glfw.KEY_L:
+        globals.cube.scramble(40, window)
+
     if key == glfw.KEY_Q and action == glfw.PRESS:
         globals.cube.drawSlowRotateFace(window, globals.program, (1, 0, 0), np.pi/2)
     
