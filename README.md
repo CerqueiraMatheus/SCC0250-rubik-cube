@@ -10,7 +10,7 @@ The file `Assignment.pdf` contains the assignment specification in portuguese wh
   
   The main file is `cube.py`. 
   
-  After downloading all the required packages, just type the following command in the terminal from the root directory of the project:
+  After downloading all the required packages: `glfw`, `pyopengl` and `numpy`, just type the following command in the terminal from the root directory of the project:
 
   ```bash
   $ python3 cube.py
