@@ -1,9 +1,27 @@
+"""
+    SCC0250 - Computação Gráfica (1o semestre de 2023)
+    Trabalho 1 - Desenvolver programa envolvendo transformações geométricas
+    Membros do grupo:
+        - Matheus H. de C. Pinto: 11911104
+        - Antonio Italo: 12542290
+        - João Favoretti: 11316055
+        - Lucas Pimentel: 10633328
+        - Gabriel Vicente Rodrigues: 11795377
+"""
+
 import glfw
 import numpy as np
 from OpenGL.GL import *
 from lib import globals
 
 def applyShaders(vert_code, frag_code):
+    """
+        Execute the correct pipeline to apply the shaders to the program
+
+        vert_code(str) - Vertex shader code
+        frag_code(str) - Fragment shader code
+    """
+
     vertex   = glCreateShader(GL_VERTEX_SHADER)
     fragment = glCreateShader(GL_FRAGMENT_SHADER)
 
@@ -23,6 +41,13 @@ def applyShaders(vert_code, frag_code):
     return program
 
 def createWindow(vert_code, frag_code):
+    """
+        Execute the correct pipeline to create the window and apply the shaders
+
+        vert_code(str) - Vertex shader code
+        frag_code(str) - Fragment shader code
+    """
+
     glfw.init()
     glfw.window_hint(glfw.VISIBLE, glfw.FALSE);
     window = glfw.create_window(700, 700, "Cubo", None, None)
@@ -33,6 +58,13 @@ def createWindow(vert_code, frag_code):
     return window, program
 
 def sendVertices(program, vertices):
+    """
+        Send the vertices to the GPU
+
+        program(OpenGL.GL.shaders.ShaderProgram) - Shader program
+        vertices(numpy.ndarray) - Vertices to be sent to the GPU
+    """
+
     buffer = glGenBuffers(1)
     glBindBuffer(GL_ARRAY_BUFFER, buffer)
     glBufferData(GL_ARRAY_BUFFER, vertices.nbytes, vertices, GL_STATIC_DRAW)
@@ -46,6 +78,15 @@ def sendVertices(program, vertices):
     glVertexAttribPointer(loc, 3, GL_FLOAT, False, stride, offset)
 
 def keyHandler(window, key, scancode, action, mods):
+    """
+        Handle the key events
+
+        window(glfw._GLFWwindow) - Window
+        key(int) - Key code
+        scancode(int) - Scancode
+        action(int) - Action code
+        mods(int) - Modifiers
+    """
     
     # Camera Scale
     if key == glfw.KEY_I:
